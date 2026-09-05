@@ -1,0 +1,6 @@
+{
+  "name": "Snapy Message",
+  "description": "A real-time social messaging app where users can customize profiles, send friend requests, and chat with friends.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

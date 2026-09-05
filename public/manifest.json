@@ -1,0 +1,47 @@
+{
+  "name": "Snapy Message",
+  "short_name": "Snapy",
+  "id": "com.snapy.message",
+  "description": "Secure real-time messaging platform",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
+  "orientation": "portrait",
+  "background_color": "#4f46e5",
+  "theme_color": "#4f46e5",
+  "gcm_sender_id": "103953800507",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/733/733585.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/733/733585.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/733/733585.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Message",
+      "short_name": "New",
+      "url": "/search",
+      "icons": [{ "src": "https://i.pinimg.com/736x/c0/e7/e3/c0e7e34714b381275cabc59cf5e41c78.jpg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Friends",
+      "short_name": "Friends",
+      "url": "/friends",
+      "icons": [{ "src": "https://i.pinimg.com/736x/c0/e7/e3/c0e7e34714b381275cabc59cf5e41c78.jpg", "sizes": "192x192" }]
+    }
+  ]
+}
