@@ -275,9 +275,9 @@ export default function AdminDashboard() {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
       !term ||
-      (u.displayName && u.displayName.toLowerCase().includes(term)) ||
-      (u.email && u.email.toLowerCase().includes(term)) ||
-      (u.username && u.username.toLowerCase().includes(term));
+      (u.displayName && String(u.displayName).toLowerCase().includes(term)) ||
+      (u.email && String(u.email).toLowerCase().includes(term)) ||
+      (u.username && String(u.username).toLowerCase().includes(term));
 
     if (!matchesSearch) return false;
 
@@ -678,20 +678,34 @@ export default function AdminDashboard() {
                                   <AlertTriangle className="w-4 h-4" />
                                 </button>
                                 {isBanned ? (
-                                  <button 
-                                    onClick={() => handleUnban(user.uid)}
-                                    className="p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all" 
-                                    title="Unban Account"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    <button 
+                                      onClick={() => handleUnban(user.uid)}
+                                      className="px-2 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-all flex items-center gap-1" 
+                                      title="Unban this user account"
+                                    >
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                      <span>Unban</span>
+                                    </button>
+                                    {!user.isPermanentlyBanned && (
+                                      <button 
+                                        onClick={() => { setBanDays(-1); setBanModal({ uid: user.uid, name: user.displayName }); }}
+                                        className="px-2 py-1 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all flex items-center gap-1" 
+                                        title="Escalate to Permanent Ban"
+                                      >
+                                        <Ban className="w-3.5 h-3.5" />
+                                        <span>Permanent</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 ) : (
                                   <button 
-                                    onClick={() => setBanModal({ uid: user.uid, name: user.displayName })}
-                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all" 
-                                    title="Ban Account"
+                                    onClick={() => { setBanDays(7); setBanModal({ uid: user.uid, name: user.displayName }); }}
+                                    className="px-2 py-1 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all flex items-center gap-1" 
+                                    title="Suspend or Ban Account (Temporary or Permanent)"
                                   >
-                                    <Ban className="w-4 h-4" />
+                                    <Ban className="w-3.5 h-3.5" />
+                                    <span>Ban</span>
                                   </button>
                                 )}
                               </div>
@@ -952,35 +966,128 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl p-8 shadow-2xl"
+              className="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl p-7 shadow-2xl border border-gray-100 dark:border-gray-800"
             >
-              <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Ban User</h2>
-              <p className="text-sm text-gray-500 mb-6">User: <span className="font-bold text-red-500">{banModal.name}</span></p>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                  <Ban className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Suspend or Ban User</h2>
+                  <p className="text-xs text-gray-500">Select the enforcement duration for this account.</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-xl mb-5 text-xs text-gray-600 dark:text-gray-300">
+                Target User: <span className="font-bold text-gray-900 dark:text-white">{banModal.name}</span>
+              </div>
               
-              <div className="space-y-3 mb-8">
+              <div className="space-y-2.5 mb-6">
                 <button 
+                  type="button"
                   onClick={() => setBanDays(1)}
-                  className={cn("w-full py-3 rounded-xl border font-bold transition-all", banDays === 1 ? "bg-orange-50 border-orange-200 text-orange-600" : "border-gray-100 text-gray-500")}
-                >1 Day Ban</button>
+                  className={cn(
+                    "w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all",
+                    banDays === 1 
+                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 shadow-xs" 
+                      : "border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  )}
+                >
+                  <div>
+                    <div className="font-bold text-sm">1 Day Suspension</div>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">Short cooling-off period (24 hours)</div>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">24 Hours</span>
+                </button>
+
                 <button 
+                  type="button"
                   onClick={() => setBanDays(7)}
-                  className={cn("w-full py-3 rounded-xl border font-bold transition-all", banDays === 7 ? "bg-orange-50 border-orange-200 text-orange-600" : "border-gray-100 text-gray-500")}
-                >7 Days Ban</button>
+                  className={cn(
+                    "w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all",
+                    banDays === 7 
+                      ? "bg-orange-50 dark:bg-orange-950/40 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200 shadow-xs" 
+                      : "border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  )}
+                >
+                  <div>
+                    <div className="font-bold text-sm">7 Days Suspension</div>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">Standard suspension for repeated violations</div>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300">1 Week</span>
+                </button>
+
                 <button 
+                  type="button"
                   onClick={() => setBanDays(30)}
-                  className={cn("w-full py-3 rounded-xl border font-bold transition-all", banDays === 30 ? "bg-orange-50 border-orange-200 text-orange-600" : "border-gray-100 text-gray-500")}
-                >30 Days Ban</button>
-                {admin.role?.toLowerCase().includes('super') && (
-                  <button 
-                    onClick={() => setBanDays(-1)}
-                    className={cn("w-full py-3 rounded-xl border font-bold transition-all", banDays === -1 ? "bg-red-50 border-red-200 text-red-600" : "border-gray-100 text-gray-500")}
-                  >Permanent Ban</button>
-                )}
+                  className={cn(
+                    "w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all",
+                    banDays === 30 
+                      ? "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-200 shadow-xs" 
+                      : "border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  )}
+                >
+                  <div>
+                    <div className="font-bold text-sm">30 Days Suspension</div>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">Extended disciplinary suspension (1 month)</div>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300">1 Month</span>
+                </button>
+
+                {/* PERMANENT BAN OPTION - ALWAYS ACCESSIBLE */}
+                <button 
+                  type="button"
+                  onClick={() => setBanDays(-1)}
+                  className={cn(
+                    "w-full p-3.5 rounded-xl border-2 text-left flex items-center justify-between transition-all",
+                    banDays === -1 
+                      ? "bg-red-50 dark:bg-red-950/50 border-red-500 dark:border-red-600 text-red-900 dark:text-red-100 shadow-md shadow-red-500/10" 
+                      : "border-red-200/70 dark:border-red-900/40 hover:bg-red-50/40 dark:hover:bg-red-950/20 text-gray-800 dark:text-gray-200"
+                  )}
+                >
+                  <div>
+                    <div className="font-bold text-sm text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                      <Ban className="w-4 h-4" />
+                      <span>Permanent Ban</span>
+                    </div>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">Indefinite expulsion from the application</div>
+                  </div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-1 rounded bg-red-600 text-white shadow-xs">
+                    Forever
+                  </span>
+                </button>
               </div>
 
+              {banDays === -1 && (
+                <div className="p-3 mb-5 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Irrevocable Suspension: </span>
+                    The account will be permanently blocked from signing in, messaging, and accessing services until manually unbanned by an admin.
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
-                <button onClick={() => setBanModal(null)} className="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">Cancel</button>
-                <button onClick={() => handleBan(banModal.uid, banDays)} className="flex-1 py-3 font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-500/20">Confirm Ban</button>
+                <button 
+                  type="button"
+                  onClick={() => setBanModal(null)} 
+                  className="flex-1 py-3 font-bold text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => handleBan(banModal.uid, banDays)} 
+                  className={cn(
+                    "flex-1 py-3 font-bold text-xs rounded-xl text-white transition-all shadow-lg flex items-center justify-center gap-1.5",
+                    banDays === -1 
+                      ? "bg-red-600 hover:bg-red-700 shadow-red-600/30" 
+                      : "bg-orange-600 hover:bg-orange-700 shadow-orange-600/20"
+                  )}
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>{banDays === -1 ? 'Confirm Permanent Ban' : `Confirm ${banDays} Day Ban`}</span>
+                </button>
               </div>
             </motion.div>
           </div>

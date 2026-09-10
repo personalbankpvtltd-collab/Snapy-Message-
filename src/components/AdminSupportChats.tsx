@@ -186,9 +186,9 @@ export default function AdminSupportChats({
   const filteredChats = supportChats.filter((chat) => {
     const term = searchTerm.toLowerCase().trim();
     if (!term) return true;
-    const name = (chat.userName || '').toLowerCase();
-    const email = (chat.userEmail || '').toLowerCase();
-    const uid = (chat.userUid || '').toLowerCase();
+    const name = String(chat.userName || '').toLowerCase();
+    const email = String(chat.userEmail || '').toLowerCase();
+    const uid = String(chat.userUid || '').toLowerCase();
     const lastMsg = getLastMessageText(chat.lastMessage).toLowerCase();
     return name.includes(term) || email.includes(term) || uid.includes(term) || lastMsg.includes(term);
   });
@@ -197,9 +197,9 @@ export default function AdminSupportChats({
     const term = userSearch.toLowerCase().trim();
     if (!term) return true;
     return (
-      (u.displayName && u.displayName.toLowerCase().includes(term)) ||
-      (u.email && u.email.toLowerCase().includes(term)) ||
-      (u.username && u.username.toLowerCase().includes(term))
+      (u.displayName && String(u.displayName).toLowerCase().includes(term)) ||
+      (u.email && String(u.email).toLowerCase().includes(term)) ||
+      (u.username && String(u.username).toLowerCase().includes(term))
     );
   });
 

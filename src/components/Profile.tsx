@@ -25,7 +25,7 @@ export default function Profile() {
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
       setNickName(profile.nickName || '');
-      setPhoneNumber(profile.phoneNumber || '');
+      setPhoneNumber(profile.phoneNumber ? String(profile.phoneNumber) : '');
       setBio(profile.bio || '');
       setPhotoURL(profile.photoURL || '');
     }

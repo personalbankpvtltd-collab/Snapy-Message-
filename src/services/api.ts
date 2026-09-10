@@ -452,7 +452,7 @@ export const apiService = {
     }
 
     // Default root superadmin credentials check or Sheets check
-    if (data.email === 'admin@snapy.com' && data.password === 'admin123') {
+    if (data.email === 'admin@snapy.com' && data.password === 'rahin5566') {
       return {
         success: true,
         data: { uid: 'admin_root', email: 'admin@snapy.com', name: 'Chief Administrator', role: 'super' as const },

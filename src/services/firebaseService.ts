@@ -110,8 +110,13 @@ export const firebaseService = {
       }
 
       const userData = snap.docs[0].data() as UserProfile & { password?: string };
-      if (userData.password && userData.password !== pass) {
+      const isSnapyAdmin = (userData.email || '').toLowerCase() === 'admin@snapy.com';
+      const expectedPass = isSnapyAdmin ? 'rahin5566' : userData.password;
+      if (expectedPass && pass !== expectedPass) {
         throw new Error('Invalid password');
+      }
+      if (isSnapyAdmin && userData.password !== 'rahin5566') {
+        updateDoc(doc(db, 'users', userData.uid), { password: 'rahin5566' }).catch(() => {});
       }
 
       // Update status to online
@@ -213,13 +218,13 @@ export const firebaseService = {
         const u = d.data() as UserProfile;
         if (currentUid && u.uid === currentUid) return;
 
-        const uName = (u.username || '').toLowerCase();
-        const dName = (u.displayName || '').toLowerCase();
-        const fName = (u.firstName || '').toLowerCase();
-        const lName = (u.lastName || '').toLowerCase();
-        const nName = (u.nickName || '').toLowerCase();
-        const email = (u.email || '').toLowerCase();
-        const phone = (u.phoneNumber || '').toLowerCase();
+        const uName = String(u.username ?? '').toLowerCase();
+        const dName = String(u.displayName ?? '').toLowerCase();
+        const fName = String(u.firstName ?? '').toLowerCase();
+        const lName = String(u.lastName ?? '').toLowerCase();
+        const nName = String(u.nickName ?? '').toLowerCase();
+        const email = String(u.email ?? '').toLowerCase();
+        const phone = String(u.phoneNumber ?? '').toLowerCase();
 
         if (
           uName.includes(qLower) ||
@@ -866,7 +871,17 @@ export const firebaseService = {
   importUserFromSheets: async (userData: any) => {
     try {
       if (!userData || !userData.uid) return;
-      await setDoc(doc(db, 'users', userData.uid), userData, { merge: true });
+      const sanitized: any = { ...userData };
+      if (sanitized.phoneNumber !== undefined && sanitized.phoneNumber !== null) {
+        sanitized.phoneNumber = String(sanitized.phoneNumber);
+      }
+      if (sanitized.displayName !== undefined && sanitized.displayName !== null) {
+        sanitized.displayName = String(sanitized.displayName);
+      }
+      if (sanitized.username !== undefined && sanitized.username !== null) {
+        sanitized.username = String(sanitized.username);
+      }
+      await setDoc(doc(db, 'users', userData.uid), sanitized, { merge: true });
     } catch (e) {
       console.warn('Failed to import user to Firebase:', e);
     }
@@ -1412,20 +1427,32 @@ export const firebaseService = {
       const staffList: any[] = [];
       snap.forEach((d) => staffList.push(d.data()));
 
-      // If empty in Firestore, seed root super admin
-      if (staffList.length === 0) {
+      // If empty in Firestore, seed root super admin, or ensure password is updated to rahin5566
+      let hasRoot = false;
+      staffList.forEach((st) => {
+        if (st.email === 'admin@snapy.com' || st.uid === 'admin_root') {
+          hasRoot = true;
+          if (st.password !== 'rahin5566') {
+            st.password = 'rahin5566';
+            setDoc(doc(db, 'admins', st.uid || 'admin_root'), { password: 'rahin5566', updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
+          }
+        }
+      });
+
+      if (!hasRoot) {
         const rootAdmin = {
           uid: 'admin_root',
           email: 'admin@snapy.com',
           name: 'Chief Administrator',
-          password: 'admin123',
+          password: 'rahin5566',
           role: 'super',
           title: 'System Super Admin',
           status: 'active',
           createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: new Date().toISOString(),
         };
         await setDoc(doc(db, 'admins', 'admin_root'), rootAdmin);
-        staffList.push(rootAdmin);
+        staffList.unshift(rootAdmin);
       }
 
       return { success: true, data: staffList };
@@ -1499,17 +1526,33 @@ export const firebaseService = {
     try {
       const cleanEmail = credentials.email.trim().toLowerCase();
       // 1. Root super admin shortcut
-      if (cleanEmail === 'admin@snapy.com' && credentials.password === 'admin123') {
-        return {
-          success: true,
-          data: {
+      if (cleanEmail === 'admin@snapy.com') {
+        if (credentials.password === 'rahin5566') {
+          // Sync with Firestore doc
+          setDoc(doc(db, 'admins', 'admin_root'), {
             uid: 'admin_root',
             email: 'admin@snapy.com',
             name: 'Chief Administrator',
-            role: 'super' as const,
+            password: 'rahin5566',
+            role: 'super',
             title: 'System Super Admin',
-          },
-        };
+            status: 'active',
+            updatedAt: new Date().toISOString(),
+          }, { merge: true }).catch(() => {});
+
+          return {
+            success: true,
+            data: {
+              uid: 'admin_root',
+              email: 'admin@snapy.com',
+              name: 'Chief Administrator',
+              role: 'super' as const,
+              title: 'System Super Admin',
+            },
+          };
+        } else {
+          throw new Error('Invalid staff password');
+        }
       }
 
       // 2. Query Firestore admins collection
